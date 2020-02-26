@@ -1,15 +1,24 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import HelloWorld from '@/components/HelloWorld'
+import Demo from '../views/demo/demo'
+import Index from '../views/index.vue'
 
 Vue.use(Router)
 
 export default new Router({
+  base: '/cip/',
   routes: [
     {
       path: '/',
-      name: 'HelloWorld',
-      component: HelloWorld
+      name: 'index',
+      component: Index,
+      children: [
+        {
+          path: '/demo',
+          name: '示例',
+          component: Demo
+        }
+      ]
     }
   ]
 })
