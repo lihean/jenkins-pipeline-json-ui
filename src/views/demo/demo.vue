@@ -1,89 +1,15 @@
 <template>
   <div class="demo-content" style="height: 100%;">
     <div style="position: relative;width: auto;height: 100%;">
-      <svg :class="generateClass('svg')" id="stageSvg" :width="svgWidth">
-        <path :class="generateClass('path')"
-              v-for="(path, index) in pathList"
-              :key="index"
-              :d="path.d"
-              stroke="#515a6e"
-              stroke-width="1"
-              fill="none"
-        >
-        </path>
-      </svg>
       <div :class="generateClass('body')" id="stageBody">
         <div :class="generateClass('parent-div')"
              v-for="(stage, index) in pipeline.stages"
              :key="index"
         >
-          <div :class="generateClass('container')"
+          <div :class="generateClass('split', index)"
                :id="'stageContent' + index"
           >
-            <h3 :class="generateClass('title')" align="left">{{stage.name}}</h3>
-            <div align="center" v-if="stage.parallel"
-                 :class="generateClass('child-container')"
-                 @mouseover="showAddStage(index)"
-                 @mouseleave="hiddenAddStage(index)"
-            >
-              <div>
-
-                <div align="center"
-                     :class="generateClass('div')"
-                     :id="stageDivPrefix + index"
-                     :ref="stageDivPrefix + index"
-                     v-for="(p, index1) in stage.parallel"
-                     :key="index1"
-                     @click="editStage(p)"
-                >
-                  <h4 style="margin: 5px 0;font-weight: unset;">{{p.name}}</h4>
-                </div>
-              </div>
-              <div align="center" v-if="showAddStageSwitch[index]"
-                   :class="generateClass('div')"
-                   :id="stageDivPrefix + index"
-                   :ref="stageDivPrefix + index"
-                   @click="editStage(p)"
-              >
-
-                <div>
-                  <Icon class="step-add-icon" type="md-add-circle" size="20" color="#515a6e"></Icon>
-                  <h4 class="step-add-h">并行任务</h4>
-                </div>
-              </div>
-            </div>
-            <div v-else align="center"
-                 :class="generateClass('child-container')"
-                 @mouseover="showAddStage(index)"
-                 @mouseleave="hiddenAddStage(index)"
-            >
-              <div align="center"
-                   :class="generateClass('div')"
-                   :id="stageDivPrefix + index"
-                   :ref="stageDivPrefix + index"
-                   v-for="(b, index1) in stage.branches"
-                   :key="index1"
-                   @click="editStage(b)"
-              >
-                <h4 style="margin: 5px 0;font-weight: unset;">{{b.name}}</h4>
-              </div>
-              <div align="center" v-if="showAddStageSwitch[index]"
-                   :class="generateClass('div')"
-                   :id="stageDivPrefix + index"
-                   :ref="stageDivPrefix + index"
-                   @click="editStage(p)"
-              >
-                <div>
-                  <Icon class="step-add-icon" type="md-add-circle" size="20" color="#515a6e"></Icon>
-                  <h4 class="step-add-h">并行任务</h4>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div :class="generateClass('split')"
-               :id="'stageContent' + index"
-          >
-            <div :class="generateClass('add-btn')">
+            <div :class="generateAddStageStepBtnClass('add-btn', index)">
               <Icon
                 :class="generateClass('add-icon')"
                 :id="stageAddBtnPrefix + index"
@@ -92,24 +18,117 @@
                 :size=22 type="md-add-circle"/>
             </div>
           </div>
+          <div :class="generateClass('container')"
+               :id="'stageContent' + index"
+          >
+            <h3 :class="generateClass('stage-title')" align="left">{{stage.name}}</h3>
+            <div align="center" v-if="stage.parallel"
+                 :class="generateClass('stages')"
+                 @mouseover="showAddParallelTask(index)"
+                 @mouseleave="hiddenAddParallelTask(index)"
+            >
+              <div align="center"
+                   :class="generateStageStepClass('stage-step', stage.parallel, index, index1)"
+                   :id="stageDivPrefix + index"
+                   :ref="stageDivPrefix + index"
+                   v-for="(p, index1) in stage.parallel"
+                   :key="index1"
+                   @click="editStage(p)"
+              >
+                <div :class="generateClass('stage-step-content')">
+                  <div class="step-content">
+                    <div style="display: inline-block;">{{p.name}}</div>
+                  </div>
+                </div>
+              </div>
+              <div align="center" v-if="showAddStageSwitch[index]"
+                   :class="generateAddStageStepClass('stage-step')"
+                   :id="stageDivPrefix + index"
+                   :ref="stageDivPrefix + index"
+                   @click="addParallelTask(index)"
+              >
+                <div :class="generateClass('stage-step-content pipeline-job-stage-step-content-add')">
+                  <div class="step-content step-content-add">
+                    <div style="display: inline-block;">
+                      <Icon class="step-add-icon" type="md-add-circle" size="19" color="#515a6e"/>
+                      并行任务
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div v-else align="center"
+                 :class="generateClass('stages')"
+                 @mouseover="showAddParallelTask(index)"
+                 @mouseleave="hiddenAddParallelTask(index)"
+            >
+              <div align="center"
+                   :class="generateStageStepClass('stage-step', stage.branches, index, index1)"
+                   :id="stageDivPrefix + index"
+                   :ref="stageDivPrefix + index"
+                   v-for="(b, index1) in stage.branches"
+                   :key="index1"
+                   @click="editStage(b)"
+              >
+                <div :class="generateClass('stage-step-content')">
+                  <div class="step-content">
+                    <div style="display: inline-block;">{{b.name}}</div>
+                  </div>
+                </div>
+              </div>
+              <div align="center" v-if="showAddStageSwitch[index]"
+                   :class="generateAddStageStepClass('stage-step')"
+                   :id="stageDivPrefix + index"
+                   :ref="stageDivPrefix + index"
+                   @click="addParallelTask(index)"
+              >
+                <div :class="generateClass('stage-step-content pipeline-job-stage-step-content-add')">
+                  <div class="step-content step-content-add">
+                    <div style="display: inline-block;">
+                      <Icon class="step-add-icon" type="md-add-circle" size="19" color="#515a6e"/>
+                      并行任务
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <!--        <div :class="generateClass('add-new')">-->
-        <!--          <div :class="generateClass('container')">-->
-        <!--            <h3 class="stage-h" style="margin: 20px 20px;color: #515a6e;">新阶段</h3>-->
-        <!--            <div align="center">-->
-        <!--              <div align="center"-->
-        <!--                   :class="generateClass('add')"-->
-        <!--                   @click="addStage"-->
-        <!--              >-->
-        <!--                <h4 style="margin: 5px 0;">添加新阶段</h4>-->
-        <!--              </div>-->
-        <!--            </div>-->
-        <!--          </div>-->
-        <!--        </div>-->
+        <div :class="generateClass('add-new')">
+          <div :class="generateClass('split')"
+          >
+            <div :class="generateAddStageStepBtnClass('add-btn', pipeline.stages.length)">
+              <Icon
+                :class="generateClass('add-icon')"
+                @click="addStage(pipeline.stages.length)"
+                :size=22 type="md-add-circle"/>
+            </div>
+          </div>
+          <div :class="generateClass('container')" style="padding: 0 20px 0 0;">
+            <h3 class="stage-h" style="margin: 20px 20px;color: #515a6e;">新阶段</h3>
+            <div align="center" :class="generateClass('stages')" style="margin-right: 20px;">
+              <div align="center"
+                   style="width: 100%;"
+                   :class="generateAddStageStepClass('stage-step', 0)"
+                   @click="addStage"
+              >
+                <div :class="generateClass('stage-step-content pipeline-job-stage-step-content-add')"
+                     style="width: 100%;">
+                  <div class="step-content step-content-add">
+                    <div style="display: inline-block;">
+                      <Icon class="step-add-icon" type="md-add-circle" size="19" color="#515a6e"/>
+                      新的任务
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <Drawer :class="generateClass('drawer')"
-            title="Create/Edit"
+            stage-title="Create/Edit"
             v-model="showStageDrawer"
             width="560"
             :mask-closable="false"
@@ -118,7 +137,7 @@
       <Row :gutter="32">
         <Col span="24">
           <p class="stage-edit-p">任务名称</p>
-          <Input v-model="formData.name" style="margin-top: 5px;" placeholder="输入任务名称"/>
+          <Input v-model="stepData.name" style="margin-top: 5px;" placeholder="输入任务名称"/>
         </Col>
       </Row>
       <Row :gutter="32" style="margin-top: 20px;">
@@ -151,17 +170,35 @@
         </ButtonGroup>
       </div>
     </Drawer>
+    <pipeline-component v-if="showAddStage" :show-modal="showAddStage" :components="components" @cancelAddStage="cancelAddStage">
+
+    </pipeline-component>
   </div>
 </template>
 
 <script>
+  import pipelineComponent from "./pipelineComponent";
+
   export default {
     name: "demo",
+    components: {
+      pipelineComponent
+    },
     data() {
       return {
-        stageClassPrefix: 'stage-step-',
-        stageDivPrefix: 'stage-step-div-',
+        stageClassPrefix: 'pipeline-job-flow pipeline-job-',
+        stageDivPrefix: 'pipeline-job-div-',
         stageAddBtnPrefix: 'add-next-btn-',
+        components: [
+          {
+            value: 'java规范扫描',
+            label: 'java规范扫描'
+          },
+          {
+            value: 'python规范扫描',
+            label: 'python规范扫描'
+          }
+        ],
         stepList: [
           {
             name: 'sh',
@@ -195,7 +232,7 @@
                     key: "script",
                     value: {
                       "isLiteral": true,
-                      "value": "./mvnw package -Dmaven.test.skip\u003dtrue"
+                      "value": "./mvn package -Dmaven.test.skip\u003dtrue"
                     }
                   }]
                 }]
@@ -365,14 +402,15 @@
         },
         pathList: [],
         showAddStageSwitch: [],
+        showAddStage: false,
         showStageDrawer: false,
         styles: {
-          height: 'calc(100% - 55px)',
+          height: 'calc(100%)',
           overflow: 'auto',
           paddingBottom: '53px',
           position: 'static'
         },
-        formData: {
+        stepData: {
           name: '',
           url: '',
           owner: '',
@@ -381,7 +419,7 @@
           date: '',
           desc: ''
         },
-        svgWidth: 0
+        currentIndex: 0
       }
     },
     created() {
@@ -397,7 +435,6 @@
 
           document.documentElement.scrollTop = 0;
           document.documentElement.scrollLeft = 0;
-          this.stagePaths();
         });
         window.addEventListener('onunload', () => {
           let dom = document.getElementsByClassName('demo-content');
@@ -406,27 +443,50 @@
 
           document.documentElement.scrollTop = 0;
           document.documentElement.scrollLeft = 0;
-          this.stagePaths();
         })
       });
     },
     methods: {
-      generateClass(suffix) {
-        return this.stageClassPrefix + suffix;
-      },
-      showAdd(index) {
-        return this.showAddStageSwitch[index];
-      },
       init() {
         this.pipeline.stages.forEach(p => {
           this.showAddStageSwitch.push(false);
         });
-        this.$nextTick(() => {
-          setTimeout(() => {
-            this.calculateSvgWidth();
-            this.stagePaths();
-          }, 200)
-        });
+      },
+      generateClass(suffix) {
+        return this.stageClassPrefix + suffix;
+      },
+      generateStageStepClass(suffix, data, stageIndex, stepIndex) {
+        if (stepIndex == 0) {
+          return this.stageClassPrefix + suffix + ' pipeline-job-' + suffix + '-capsule-first';
+        }
+
+        if (Array.isArray(data)) {
+          if (stepIndex == data.length - 1) {
+            if (this.showAddStageSwitch[stageIndex]) {
+              return this.stageClassPrefix + suffix + ' pipeline-job-' + suffix + '-capsule';
+            } else {
+              return this.stageClassPrefix + suffix + ' pipeline-job-' + suffix + '-capsule-latest';
+            }
+          } else {
+            return this.stageClassPrefix + suffix + ' pipeline-job-' + suffix + '-capsule';
+          }
+        }
+
+        return this.stageClassPrefix + suffix + ' pipeline-job-' + suffix + '-capsule';
+      },
+      generateAddStageStepClass(suffix, stepIndex) {
+        if (stepIndex == 0) {
+          return this.stageClassPrefix + suffix + ' pipeline-job-' + suffix + '-capsule-first';
+        }
+
+        return this.stageClassPrefix + suffix + ' pipeline-job-' + suffix + '-capsule-latest';
+      },
+      generateAddStageStepBtnClass(suffix, stageIndex) {
+        if (stageIndex == 0) {
+          return this.stageClassPrefix + suffix + '-first';
+        }
+
+        return this.stageClassPrefix + suffix;
       },
       getStepInfo(name) {
         let steps = this.stepList.filter(s => {
@@ -435,80 +495,8 @@
 
         return steps.length == 0 ? null : steps[0];
       },
-      stagePaths() {
-        this.pathList = [];
-        let dom = document.getElementById('app');
-        let verticalOffset = dom.getBoundingClientRect().width * 0.125;
-        //对stages循环遍历计算path
-        let i = 0;
-        for (let index in this.pipeline.stages) {
-          let nodes = this.getLocationSingle(this.stageDivPrefix + index);
-          let btnNode = document.getElementById(this.stageAddBtnPrefix + index);
-          if (null != btnNode) {
-            for (let node of nodes) {
-              let path = this.defaultPath(i++);
-              path.d = this.calculatePath(node.getBoundingClientRect(), btnNode.getBoundingClientRect(), false, verticalOffset);
-              this.pathList.push(path);
-            }
-          }
-
-          if (index != 0) {
-            let btnNode1 = document.getElementById(this.stageAddBtnPrefix + (index - 1));
-            if (null == btnNode1) {
-              continue;
-            }
-            for (let node of nodes) {
-              let path = this.defaultPath(i++);
-              path.d = this.calculatePath(btnNode1.getBoundingClientRect(), node.getBoundingClientRect(), true, verticalOffset);
-              this.pathList.push(path);
-            }
-          }
-        }
-      },
-      defaultPath(num) {
-        return {
-          d: null,
-          name: 'stagePath' + num,
-          stroke: '#515a6e',
-          strokeWidth: 1
-        }
-      },
-      getLocationSingle(name) {
-        return this.$refs[name];
-      },
-      getLocation(name1, name2) {
-        let node1 = this.$refs[name1];
-        let node2 = this.$refs[name2];
-
-        let ele1 = null;
-        let ele2 = null;
-
-        if (Array.isArray(node1)) {
-          ele1 = node1[0];
-        } else {
-          ele1 = node1;
-        }
-
-        if (Array.isArray(node2)) {
-          ele2 = node2[0];
-        } else {
-          ele2 = node2;
-        }
-
-        return [ele1, ele2]
-      },
-      calculatePath(ele1, ele2, desc, verticalOffset) {
-        if (desc) {
-          return 'M' + ((ele2.x - verticalOffset) + ' ' + (ele2.y + ele2.height * 0.5))
-            + ' L' + ((ele1.x + ele1.width - verticalOffset) + (ele2.x - (ele1.x + ele1.width)) * 0.5) + ' ' + (ele2.y + ele2.height * 0.5)
-            + ' L' + ((ele1.x + ele1.width - verticalOffset) + (ele2.x - (ele1.x + ele1.width)) * 0.5) + ' ' + (ele1.y + ele1.height * 0.5)
-            + ' L' + (ele1.x + ele1.width - 2 - verticalOffset) + ' ' + (ele1.y + ele1.height * 0.5)
-        } else {
-          return 'M' + (ele1.x + ele1.width - verticalOffset) + ' ' + (ele1.y + ele1.height * 0.5)
-            + ' L' + ((ele1.x + ele1.width - verticalOffset) + (ele2.x - (ele1.x + ele1.width)) * 0.5) + ' ' + (ele1.y + ele1.height * 0.5)
-            + ' L' + ((ele1.x + ele1.width - verticalOffset) + (ele2.x - (ele1.x + ele1.width)) * 0.5) + ' ' + (ele2.y + ele2.height * 0.5)
-            + ' L' + ((ele2.x + 2 - verticalOffset) + ' ' + (ele2.y + ele2.height * 0.5))
-        }
+      showAdd(index) {
+        return this.showAddStageSwitch[index];
       },
       submit() {
         this.showStageDrawer = false;
@@ -516,12 +504,14 @@
       cancel() {
         this.showStageDrawer = false;
       },
+      // stage相关方法
       editStage(p) {
         this.showStageDrawer = true;
       },
       addStage(index) {
+        this.currentIndex = index;
         this.$Message.info('新增stage');
-        this.pipeline.stages.splice(index + 1, 0, {
+        this.pipeline.stages.splice(this.currentIndex, 0, {
           name: '新阶段',
           branches: [{
             name: "default",
@@ -529,31 +519,31 @@
           }]
         });
         console.log(this.pipeline.stages);
-        this.calculateSvgWidth();
+        this.showAddStage = true;
+      },
+      cancelAddStage() {
+        this.showAddStage = false;
+        this.pipeline.stages.splice(this.currentIndex, 1);
       },
       deleteStageStep() {
 
       },
-      showAddStage(index) {
+      // 并行任务相关方法
+      showAddParallelTask(index) {
         console.log('show-add-stage-' + index);
         this.$set(this.showAddStageSwitch, index, true);
-        this.$nextTick(() => {
-          this.stagePaths();
-        });
       },
-      hiddenAddStage(index) {
+      hiddenAddParallelTask(index) {
         console.log('hidden-add-stage-' + index);
         this.$set(this.showAddStageSwitch, index, false);
-        this.$nextTick(() => {
-          this.stagePaths();
-        });
       },
-      calculateSvgWidth() {
-        setTimeout(() => {
-          let dom = document.getElementById('stageBody');
-          console.log(dom.getBoundingClientRect());
-          this.svgWidth = dom.getBoundingClientRect().width;
-        }, 200);
+      addParallelTask(index) {
+        this.$Message.info("请选择要添加的组件");
+        this.showAddStage = true;
+      },
+      cancelAddParallelTask(index) {
+        this.$Message.info("取消添加组件");
+        this.showAddStage = false;
       }
     }
   }
@@ -565,64 +555,140 @@
     background-color: rgba(240, 240, 240, .5);
   }
 
-  .stage-step-parent-div {
+  .pipeline-job-parent-div {
     min-width: 300px;
     background-color: rgba(240, 240, 240, .5);
     display: table-cell;
     z-index: 10;
   }
 
-  .stage-step-add-new {
+  .pipeline-job-add-new {
     min-width: 200px;
     background-color: rgba(240, 240, 240, .5);
     display: table-cell;
     z-index: 10;
   }
 
-  .stage-step-container {
-    width: 90%;
-    height: 770px;
+  .pipeline-job-container {
+    width: 80%;
+    height: 745px;
     float: left;
   }
 
-  .stage-step-child-container {
-    width: 60%;
+  .pipeline-job-stages {
+    width: 100%;
     margin: 0 auto;
     z-index: 10;
+    /*height: 100%;*/
+  }
+
+  .pipeline-job-stage-step {
+    width: 100%;
+    height: 56px;
+    position: relative;
+    z-index: 10;
+  }
+
+  .pipeline-job-stage-step-capsule:before {
+    content: "";
+    position: absolute;
+    top: -75%;
+    left: 0;
+    border-left: 1px solid #d9d9d9;
+    border-right: 1px solid #d9d9d9;
+    border-bottom: 1px solid #d9d9d9;
+    width: 100%;
     height: 100%;
   }
 
-  .stage-step-div {
+  .pipeline-job-stage-step-capsule-first:before {
+    content: "";
+    position: absolute;
+    top: -75%;
+    left: 0;
+    /*border-left: 1px solid #d9d9d9;*/
+    /*border-right: 1px solid #d9d9d9;*/
+    border-bottom: 1px solid #d9d9d9;
     width: 100%;
-    background-color: rgba(240, 240, 240, .5);
+    height: 100%;
+  }
+
+  .pipeline-job-stage-step-capsule-latest:before {
+    content: "";
+    position: absolute;
+    top: -75%;
+    left: 0;
+    border-left: 1px solid #d9d9d9;
+    border-right: 1px solid #d9d9d9;
+    border-bottom: 1px solid #d9d9d9;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+    width: 100%;
+    height: 100%;
+  }
+
+  .pipeline-job-stage-step:hover {
+    border-color: #2d8cf0;
+    color: #2d8cf0;
+  }
+
+  .pipeline-job-stage-step-content {
+    /*min-width: 100px;*/
+    width: 80%;
+    background-color: rgb(240, 240, 240);
     border: 1px solid #515a6e;
-    margin: 5px 0 20px 0;
     border-radius: 36px;
     cursor: pointer;
     position: relative;
     z-index: 10;
   }
 
-  .stage-step-div:hover {
-    border-color: #2d8cf0;
-    color: #2d8cf0;
+  .pipeline-job-stage-step-content-add {
+    /*min-width: 100px;*/
+    width: 80%;
+    background-color: rgb(240, 240, 240);
+    border: 1px dashed #515a6e;
+    border-radius: 36px;
+    cursor: pointer;
+    position: relative;
+    z-index: 10;
   }
 
-  .stage-step-title {
+  .step-content {
+    background: #fff;
+    /*border: 1px solid #e5e5e5;*/
+    border-radius: 36px;
+    height: 28px;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: center;
+    -webkit-justify-content: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .pipeline-job-stage-title {
     margin: 20px 20px;
     position: relative;
     z-index: 10;
     cursor: unset;
   }
 
-  .stage-step-split {
-    width: 10%;
-    float: right;
-    height: 770px;
+  .pipeline-job-split {
+    width: 20%;
+    float: left;
+    height: 745px;
     text-align: center;
   }
 
-  .stage-step-add-btn:before {
+  .pipeline-job-add-btn:before {
     content: "";
     height: 100%;
     border-left: 1px solid #d9d9d9;
@@ -630,7 +696,16 @@
     z-index: 10;
   }
 
-  .stage-step-add-btn {
+  .pipeline-job-add-btn:after {
+    content: "";
+    width: 100%;
+    border-top: 1px solid #d9d9d9;
+    position: absolute;
+    margin-left: -50%;
+    top: 77.5px;
+  }
+
+  .pipeline-job-add-btn {
     position: relative;
     cursor: pointer;
     color: #8c8c8c;
@@ -638,9 +713,33 @@
     z-index: 10;
   }
 
-  .stage-step-add-icon {
+  .pipeline-job-add-btn-first:before {
+    content: "";
+    height: 100%;
+    border-left: 1px solid #d9d9d9;
     position: absolute;
-    top: 70px;
+    z-index: 10;
+  }
+
+  .pipeline-job-add-btn-first:after {
+    content: "";
+    width: 50%;
+    border-top: 1px solid #d9d9d9;
+    position: absolute;
+    top: 77.5px;
+  }
+
+  .pipeline-job-add-btn-first {
+    position: relative;
+    cursor: pointer;
+    color: #8c8c8c;
+    height: 100%;
+    z-index: 10;
+  }
+
+  .pipeline-job-add-icon {
+    position: absolute;
+    top: 67.5px;
     margin-left: -11px;
     z-index: 10;
   }
@@ -655,35 +754,35 @@
     margin-left: -16px;
   }
 
-  .stage-step-svg {
+  .pipeline-job-svg {
     /*width: 2000px;*/
     position: absolute;
     top: 0;
     left: 0;
-    height: 770px;
+    height: 745px;
     float: left;
     background-color: rgba(240, 240, 240, .0);
     z-index: 0;
   }
 
-  .stage-step-body {
+  .pipeline-job-body {
     position: absolute;
     top: 0;
     left: 0;
-    height: 770px;
+    height: 745px;
     width: auto;
     float: left;
     background-color: rgba(240, 240, 240, .0);
     z-index: 0;
   }
 
-  .stage-step-path {
+  .pipeline-job-path {
     z-index: 20;
     cursor: pointer;
     padding: 10px 0;
   }
 
-  .stage-step-add {
+  .pipeline-job-add {
     width: 60%;
     background: #f0f0f0;
     border: 1px solid #515a6e;
@@ -699,13 +798,17 @@
 
   .step-add-icon {
     display: inline-block;
-    margin: 5px 0;
   }
 
   .step-add-h {
     margin: 5px 0;
     font-weight: unset;
     display: inline-block;
+  }
+
+  .pipeline-job-stage-step-content:hover {
+    color: #2d8cf0;
+    border: 1px solid #2d8cf0;
   }
 
 </style>

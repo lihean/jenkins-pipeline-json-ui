@@ -42,7 +42,7 @@
         </h2>
         <Menu></Menu>
       </Col>
-      <Col span="21" style="height: calc(100% - 55px);overflow: auto;">
+      <Col span="21" style="height: calc(100%);overflow: auto;">
         <div>
           <div>
             <transition mode="out-in">
